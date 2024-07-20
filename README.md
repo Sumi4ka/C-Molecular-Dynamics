@@ -16,3 +16,6 @@ This project consist of several classes:
 
 The program implements parallel programming.
 And I use threadpool and hand-made synchronization.
+## Instruction 
+- Install C# (7.2 or newer) with .Net 1.1 or newer;
+- Launch 
