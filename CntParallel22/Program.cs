@@ -6,6 +6,7 @@ using System.Threading;
 
 namespace CntCnt
 {
+    //additional Atom's variables for Runge Kutta Calculating
     abstract class AtomRungeKutta4Coof
     {
         public double x0, y0, z0;
@@ -14,20 +15,22 @@ namespace CntCnt
         public double xb3, yb3, zb3;
         public double xb4, yb4, zb4;
     }
+    //Atom class
     abstract class Atom : AtomRungeKutta4Coof
     {
-        readonly Molecule M;
+        readonly Molecule M; //Molecule 
+        //Coordinates, velocities, mass,  ε is the depth of the potential well, and σ is the distance at which the particle-particle potential energy V is zero
         public double x, y, z, u, v, w, m, eps = 0, sigma = 0, xA, yA, zA, ro, eps0, sigma0, c, U, FLJ;
-        public Atom(double x, double y, double z, Molecule M) { this.x = x; this.y = y; this.z = z; this.M = M; }
-        public double FLJx, FLJy, FLJz;
-        public void VelocityStep()
+        public Atom(double x, double y, double z, Molecule M) { this.x = x; this.y = y; this.z = z; this.M = M; } //Constructor
+        public double FLJx, FLJy, FLJz; //Lennard-Jones coof
+        public void VelocityStep() //Velocity step
         {
             u = M.OmegaY * z - M.OmegaZ * y;
             v = M.OmegaZ * x - M.OmegaX * z;
             w = M.OmegaX * y - M.OmegaY * x;
         }
-        public bool flag = false;
-        public void ParallelMethod()
+        public bool flag = false; //Synchronize flag
+        public void ParallelMethod() //Parallel Method 1: differencial Lennard-Jones
         {
             FLJx = 0.0; FLJy = 0.0; FLJz = 0.0;
             foreach (Molecule m in M.ExternalObject)
@@ -46,7 +49,7 @@ namespace CntCnt
             }
             flag = true;
         }
-        public void ParallelMethod2()
+        public void ParallelMethod2() //Parallel Method 2: Lennard-Jones
         {
             FLJx = 0.0; FLJy = 0.0; FLJz = 0.0;
             foreach (Molecule m in M.ExternalObject)
@@ -63,6 +66,7 @@ namespace CntCnt
             flag = true;
         }
     }
+    //Carbon class (child class for Atom)
     sealed class Carbon : Atom
     {
         public Carbon(double x, double y, double z, Molecule M) : base(x, y, z, M)
@@ -72,6 +76,7 @@ namespace CntCnt
             sigma = 0.34;
         }
     }
+    //additional Molecule's variables for Runge Kutta Calculating
     abstract class MoleculeRungeKutta4Coof
     {
         public double u0, v0, w0, x0, y0, z0, Kx0, Ky0, Kz0;
@@ -80,25 +85,26 @@ namespace CntCnt
         public double ub3, vb3, wb3, xb3, yb3, zb3, Lx3, Ly3, Lz3;
         public double ub4, vb4, wb4, xb4, yb4, zb4, Lx4, Ly4, Lz4;
     }
+    //Molecule class
     sealed class Molecule : MoleculeRungeKutta4Coof
     {
-        public double x, y, z, u, v, w, OmegaX, OmegaY, OmegaZ, Mass = 0.0;
-        public List<Atom> Atoms = new List<Atom>();
-        public string name;
-        public Molecule(string name) { this.name = name; }
-        public void AddAtom(Atom a) { Atoms.Add(a); this.Mass += a.m; }
-        public void InitiateSpaceCoor(double x, double y, double z) { this.xM0 = this.x = x; this.yM0 = this.y = y; this.zM0 = this.z = z; }
-        public void InitiateVelocityCoor(double u, double v, double w) { this.uM0 = this.u = u; this.vM0 = this.v = v; this.wM0 = this.w = w; }
-        public void InitiateAngleVelocityCoor(double OmegaX, double OmegaY, double OmegaZ) { this.OmegaX0 = this.OmegaX = OmegaX; this.OmegaY0 = this.OmegaY = OmegaY; this.OmegaZ0 = this.OmegaZ = OmegaZ; }
+        public double x, y, z, u, v, w, OmegaX, OmegaY, OmegaZ, Mass = 0.0; //Coordinates, velocity, angle velocity, Mass
+        public List<Atom> Atoms = new List<Atom>(); //List of Atoms
+        public string name; //Name
+        public Molecule(string name) { this.name = name; } //Constructor (Molecule is empty)
+        public void AddAtom(Atom a) { Atoms.Add(a); this.Mass += a.m; } //Add Atom to Molecule
+        public void InitiateSpaceCoor(double x, double y, double z) { this.xM0 = this.x = x; this.yM0 = this.y = y; this.zM0 = this.z = z; } // Initiate Space Coor
+        public void InitiateVelocityCoor(double u, double v, double w) { this.uM0 = this.u = u; this.vM0 = this.v = v; this.wM0 = this.w = w; } //Initiate Velocity Coor
+        public void InitiateAngleVelocityCoor(double OmegaX, double OmegaY, double OmegaZ) { this.OmegaX0 = this.OmegaX = OmegaX; this.OmegaY0 = this.OmegaY = OmegaY; this.OmegaZ0 = this.OmegaZ = OmegaZ; }//Initiate AngleVelocity Coor
         //External
-        public readonly List<Molecule> ExternalObject = new List<Molecule>();
-        public void AddEObject(Molecule m) { ExternalObject.Add(m); }
+        public readonly List<Molecule> ExternalObject = new List<Molecule>(); //List of external molecules
+        public void AddEObject(Molecule m) { ExternalObject.Add(m); }         //Add molecule to List of external molecules
         //Supporting coofs and methods
-        public double A, B, C, D, E, F, Kx, Ky, Kz, ub, vb, wb, Lx, Ly, Lz;
-        public double xM0, yM0, zM0, uM0, vM0, wM0, OmegaX0, OmegaY0, OmegaZ0;
-        public void CMToZero() //функция переноса центра масс в нуль сис.коор.
+        public double A, B, C, D, E, F, Kx, Ky, Kz, ub, vb, wb, Lx, Ly, Lz;   //Coof of inertia tensor
+        public double xM0, yM0, zM0, uM0, vM0, wM0, OmegaX0, OmegaY0, OmegaZ0; //Initiate Data
+        public void CMToZero() //Function that provide to transfer centre mass to zero
         {
-            double xM = 0.0, yM = 0.0, zM = 0.0;
+            double xM = 0.0, yM = 0.0, zM = 0.0;a
             foreach (Atom a in Atoms)
             {
                 xM += a.m * a.x;
@@ -110,7 +116,7 @@ namespace CntCnt
             zM /= Mass;
             foreach (Atom a in Atoms) { a.x -= xM; a.y -= yM; a.z -= zM; }
         }
-        public void CoofTenzor()
+        public void CoofTenzor() //Calculate inertia coof
         {
             A = 0.0;
             B = 0.0;
@@ -129,7 +135,7 @@ namespace CntCnt
                 F -= Atoms[j].m * Atoms[j].x * Atoms[j].y;
             }
         }
-        public void AngleVelocity()
+        public void AngleVelocity() //Calculate angle velocity coor
         {
             double delta0 = A * B * C + E * F * D + E * F * D - B * E * E - C * F * F - A * D * D;
             if (delta0 != 0.0)
@@ -141,13 +147,13 @@ namespace CntCnt
             }
             else { OmegaX = 0.0; OmegaY = 0.0; OmegaZ = 0.0; }
         }
-        public void KineticMoment()
+        public void KineticMoment() //Calculate Kinetic Moment
         {
             Kx = A * OmegaX + F * OmegaY + E * OmegaZ;
             Ky = F * OmegaX + B * OmegaY + D * OmegaZ;
             Kz = E * OmegaX + D * OmegaY + C * OmegaZ;
         }
-        public void MomentForces()
+        public void MomentForces()//Calculate Moment Forces
         {
             Lx = Ly = Lz = 0.0;
             foreach (Atom a in Atoms)
@@ -158,16 +164,17 @@ namespace CntCnt
             }
         }
     }
+    //Solver (main class for this problem)
     sealed class Solver
     {
-        public double dt; public int T;
+        public double dt; public int T; //Step of time and count of time iterations,
         public Solver(int T, double dt)
         {
             this.dt = dt; this.T = T;
             Data.SetTdt(T, dt);
         }
-        public readonly List<Molecule> Molecules = new List<Molecule>();
-        public void AddMolecule(Molecule M)
+        public readonly List<Molecule> Molecules = new List<Molecule>(); //List of Molecules that I used in calculating
+        public void AddMolecule(Molecule M) //Add Molceule to calculating
         {
             foreach (Molecule m in Molecules)
             {
@@ -176,7 +183,7 @@ namespace CntCnt
             }
             Molecules.Add(M);
         }
-        public void UVW()
+        public void UVW() //class that help to parallelize this project
         {
             foreach (Molecule m in Molecules)
             {
@@ -213,7 +220,7 @@ namespace CntCnt
                 m.ub /= m.Mass; m.vb /= m.Mass; m.wb /= m.Mass;
             }
         }
-        public double Balance()
+        public double Balance() //Calculate balance characteristic
         {
             double H = 0;
             foreach (Molecule m in Molecules)
@@ -247,7 +254,7 @@ namespace CntCnt
             }
             return H;
         }
-        public string Solve()
+        public string Solve() //Main function
         {
             Console.WriteLine(0);
             Data.WriteDate();
@@ -464,7 +471,7 @@ namespace CntCnt
             return "Completed!!!";
         }
     }
-    static class Data
+    static class Data //This class provide to work with Data
     {
         static int T; static double dt;
         public static void SetTdt(int T, double dt)
@@ -474,7 +481,7 @@ namespace CntCnt
         private static readonly List<Molecule> Molecules = new List<Molecule>();
         private static readonly List<StreamWriter> Lsw = new List<StreamWriter>();
         static StreamWriter sw1;
-        public static void ReadFiles(string s, Molecule M)
+        public static void ReadFiles(string s, Molecule M) //Read Files
         {
             Molecules.Add(M);
             string RootDirectory = Directory.GetCurrentDirectory();
@@ -496,7 +503,7 @@ namespace CntCnt
                 }
             }
         }
-        public static void OpenFiles(string str)
+        public static void OpenFiles(string str)//Open writing Files
         {
             string RootDirectory = Directory.GetCurrentDirectory();
             str = RootDirectory + "\\Results\\" + str;
@@ -519,7 +526,7 @@ namespace CntCnt
             }
             sw0.Close();
         }
-        public static void WriteDate()
+        public static void WriteDate()//WriteData to writing Files
         {
             string s;
             for (int i = 0; i < Molecules.Count; i++)
@@ -530,11 +537,11 @@ namespace CntCnt
                 Lsw[i].WriteLine(s.Replace(',', '.'));
             }
         }
-        public static void WriteEnergy(double Energy)
+        public static void WriteEnergy(double Energy)//Write Energy to writing Files
         {
             sw1.WriteLine(Energy.ToString().Replace(',', '.'));
         }
-        public static void CloseFiles()
+        public static void CloseFiles()//Close writing Files
         {
             foreach (StreamWriter sw in Lsw)
             {
@@ -544,12 +551,12 @@ namespace CntCnt
             Console.WriteLine("Files writing completed");
         }
     }
-    static class Constant
+    static class Constant //Class of constants
     {
         public static double KB = 1.380649 * Math.Pow(10.0, -23);
         public static double atomMass = 1.6605390666 * Math.Pow(10.0, -27);
     }
-    internal static class Program
+    internal static class Program //Main class
     {
         static void Main()
         {
