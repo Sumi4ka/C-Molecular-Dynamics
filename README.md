@@ -11,7 +11,8 @@ This project consist of several classes:
 - Molecule that contain Atoms
 - Like Atom Molecule has MoleculeRungeKutta4Coof
 - Solver - main class for calculating
-- Data - 
+- Data - this class provide to work with Data:
+  - In this catalog there is Data directory where there are two files with data
 
 The program implements parallel programming.
 And I use threadpool and hand-made synchronization.
